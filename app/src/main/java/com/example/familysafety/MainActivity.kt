@@ -25,7 +25,7 @@ class MainActivity : AppCompatActivity() {
             }else if(it.itemId == R.id.nav_profile){
                 inflateFragment(ProfileFragment.newInstance())
             }else{
-                inflateFragment(DashboardFragment.newInstance())
+                inflateFragment(MapsFragment())
             }
 
             true
