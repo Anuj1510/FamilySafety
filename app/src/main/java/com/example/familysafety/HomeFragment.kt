@@ -2,16 +2,21 @@ package com.example.familysafety
 
 import android.os.Bundle
 import android.provider.ContactsContract
-import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 
 class HomeFragment : Fragment() {
+
+    private val listcontacts : ArrayList<InviteModal> = ArrayList()
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -47,19 +52,62 @@ class HomeFragment : Fragment() {
         recycler.adapter = adapter
 
 
-        val inviteadapter = inviteAdapter(fetchContacts())
+
+
+
+        val inviteadapter = inviteAdapter(listcontacts)
+
+        CoroutineScope(Dispatchers.IO).launch {
+
+            listcontacts.clear()
+
+            listcontacts.addAll(fetchDatabaseContacts())
+            withContext(Dispatchers.Main){ // thread ke beech mai switch krne ke liye, humme io se main mai switch krna tha
+                inviteadapter.notifyDataSetChanged()
+            }
+
+
+            listcontacts.addAll(fetchContacts())
+
+            insertDatabaseContacts(listcontacts)
+
+            withContext(Dispatchers.Main){ // thread ke beech mai switch krne ke liye, humme io se main mai switch krna tha
+                inviteadapter.notifyDataSetChanged()
+            }
+
+
+        }
+
+
+
 
         val inviterecycler = requireView().findViewById<RecyclerView>(R.id.recycler_invite)
         inviterecycler.layoutManager = LinearLayoutManager(requireContext(),LinearLayoutManager.HORIZONTAL,false)
         inviterecycler.adapter = inviteadapter
     }
 
-    private fun fetchContacts(): ArrayList<inviteModal> {
+    private suspend fun fetchDatabaseContacts(): Collection<InviteModal> {
+
+        val database = FamilyDatabase.getDatabase(requireContext())
+
+        return database.contactDao().getAllContacts()
+
+    }
+
+    private suspend fun insertDatabaseContacts(listcontacts: ArrayList<InviteModal>) {
+
+        val database = FamilyDatabase.getDatabase(requireContext())
+
+        database.contactDao().insertAll(listcontacts)
+
+    }
+
+    private fun fetchContacts(): ArrayList<InviteModal> {
 
         val cr = requireActivity().contentResolver
         val cursor = cr.query(ContactsContract.Contacts.CONTENT_URI, null, null, null, null)
 
-        val listContacts: ArrayList<inviteModal> = ArrayList()
+        val listContacts: ArrayList<InviteModal> = ArrayList()
 
 
         if (cursor != null && cursor.count > 0) {
@@ -88,7 +136,7 @@ class HomeFragment : Fragment() {
                             val phoneNum =
                                 pCur.getString(pCur.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER))
 
-                            listContacts.add(inviteModal(name, phoneNum))
+                            listContacts.add(InviteModal(name, phoneNum))
 
                         }
                         pCur.close()

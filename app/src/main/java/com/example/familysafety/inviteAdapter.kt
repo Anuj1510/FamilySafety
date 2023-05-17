@@ -3,11 +3,10 @@ package com.example.familysafety
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 
-class inviteAdapter(private val listMembers:List<inviteModal>):RecyclerView.Adapter<inviteAdapter.ViewHolder>() {
+class inviteAdapter(private val listMembers:List<InviteModal>):RecyclerView.Adapter<inviteAdapter.ViewHolder>() {
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): inviteAdapter.ViewHolder {
         val inflater = LayoutInflater.from(parent.context)
         val item = inflater.inflate(R.layout.item_invite,parent,false)
